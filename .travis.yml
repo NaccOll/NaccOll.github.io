@@ -8,6 +8,7 @@ branches:
     - write
 git:
   depth: 1
+install: "npm install"
 script: "hexo generate"
 deploy:
   local_dir: public
