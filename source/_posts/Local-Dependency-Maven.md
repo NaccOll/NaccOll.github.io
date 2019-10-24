@@ -26,7 +26,7 @@ mvn install:install-file -Dfile=mylib.jar -DgroupId=com.example -DartifactId=myl
 yourproject
 +- pom.xml
 +- src
-+- repo
++- lib
    +- com
       +- example
          +- mylib
@@ -46,7 +46,7 @@ yourproject
     <repository>
         <id>project.local</id>
         <name>project</name>
-        <url>file:${project.basedir}/repo</url>
+        <url>file://${project.basedir}/lib</url>
     </repository>
 </repositories>
 
@@ -67,13 +67,7 @@ yourproject
 关于名称不规范的问题，可以使用 maven install 的方式去解决它
 
 ```bash
-mvn install:install-file \
-    -Dfile=《Jar Path》 \
-    -DgroupId=《Group Id》 \
-    -DartifactId=《Artifact Id》 \
-    -Dversion=《Version》 \
-    -Dpackaging=jar \
-    -DlocalRepositoryPath=《${project.basedir}》/libs/local-maven-repository
+mvn install:install-file -Dfile=jar_path -DgroupId=group_id -DartifactId=artifact_id -Dversion=jar_version -Dpackaging=jar -DlocalRepositoryPath=project_basedir/lib
 ```
 
 它将把一个依赖安装到你指定的文件夹（本地仓库）中，并按规范的方式进行命名，而无需担心名称不规范的问题
@@ -86,7 +80,7 @@ mvn install:install-file \
   <artifactId>mylib</artifactId>
   <version>1.0</version>
   <scope>system</scope>
-  <systemPath>\${project.basedir}/src/main/resources/lib/mylib-1.0.jar</systemPath>
+  <systemPath>${project.basedir}/src/main/resources/lib/mylib-1.0.jar</systemPath>
 </dependency>
 ```
 
@@ -119,8 +113,8 @@ mvn install:install-file \
     </plugins>
     <resources>
       <resource>
-        <targetPath>repo/</targetPath>
-        <directory>repo/</directory>
+        <targetPath>lib/</targetPath>
+        <directory>lib/</directory>
         <includes>
           <include>\*\*/mylib.jar</include>
         </includes>
