@@ -260,6 +260,277 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://naccoll.github.io/2020/06/02/nginx-uri-standard/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="NaccOll">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="NaccOll's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/06/02/nginx-uri-standard/" itemprop="url">关于NGINX转发时的URI规范化</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-06-02T16:12:47+08:00">
+                2020-06-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>当前经过 encodeURI，多数 MVC 框架已经能够正常工作而无需担心特殊字符集的问题。</p>
+<p>而如果直接在路径上携带入[]|等字符，MVC 框架会根据自己的情况返回错误的 http 状态码</p>
+<p>而一般的 http client 也会自行将 uri 编码，在服务端与客户端都已经做好对应的操作的前提下，仍有可能因为特殊字符导致不可访问的情况。</p>
+<p>当使用 nginx 进行转发的时候，如果转发服务带上 request_uri，哪怕是/，如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/</span><br></pre></td></tr></table></figure>
+
+<p>那么 nginx 解析请求后会直接将 uri 进行转发，此时特殊字符将直接被传递到目标服务，引发错误</p>
+<blockquote>
+<p>If the proxy_pass directive is specified with a URI, then when a request is passed to the server, the part of a normalized request URI matching the location is replaced by a URI specified in the directive:<br>如果使用 URI 指定了 proxy_pass 指令，那么当请求传递到服务器时，与该位置匹配的规范化请求 URI 的一部分将被该指令中指定的 URI 代替：</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set $modified_uri $request_uri;</span><br><span class="line"></span><br><span class="line">if ($modified_uri ~ &quot;^/([\w]&#123;2&#125;)(/.*)&quot;) &#123;</span><br><span class="line">  set $modified_uri $1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">proxy_pass http://example$modified_uri;</span><br></pre></td></tr></table></figure>
+
+<h2 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h2><h3 id="nginx-反向代理不使用"><a href="#nginx-反向代理不使用" class="headerlink" title="nginx 反向代理不使用/"></a>nginx 反向代理不使用/</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com</span><br></pre></td></tr></table></figure>
+
+<p>nginx 对 uri 会进行规范化再进行传递，从而避免问题。</p>
+<blockquote>
+<p>If proxy_pass is specified without a URI, the request URI is passed to the server in the same form as sent by a client when the original request is processed, or the full normalized request URI is passed when processing the changed URI:<br>如果指定 proxy_pass 时不带 URI，则将请求 URI 以与客户端在处理原始请求时发送的格式相同的形式传递给服务器，或者在处理更改的 URI 时传递完整的规范化请求 URI：</p>
+</blockquote>
+<h3 id="rewrite"><a href="#rewrite" class="headerlink" title="rewrite"></a>rewrite</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /foo &#123;</span><br><span class="line">    <span class="attribute">rewrite</span> <span class="regexp"> ^</span>  <span class="variable">$request_uri</span>;            <span class="comment"># get original URI</span></span><br><span class="line">    <span class="attribute">rewrite</span> <span class="regexp"> ^/foo(/.*)</span>  /bar<span class="variable">$1</span>  <span class="literal">break</span>;  <span class="comment"># drop /foo, put /bar， 此处如果转发目标无需前缀，可直接填$1</span></span><br><span class="line">    <span class="attribute">return</span> <span class="number">400</span>;   <span class="comment"># if the second rewrite won't match</span></span><br><span class="line">    <span class="attribute">proxy_pass</span>    http://localhost:8080<span class="variable">$uri</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="目标服务自身的变更-Spring-Boot"><a href="#目标服务自身的变更-Spring-Boot" class="headerlink" title="目标服务自身的变更(Spring Boot)"></a>目标服务自身的变更(Spring Boot)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTomcatWebServerCustomizer</span></span></span><br><span class="line"><span class="class">        <span class="keyword">implements</span> <span class="title">WebServerFactoryCustomizer</span>&lt;<span class="title">TomcatServletWebServerFactory</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">customize</span><span class="params">(TomcatServletWebServerFactory factory)</span> </span>&#123;</span><br><span class="line">        factory.addConnectorCustomizers(<span class="keyword">new</span> TomcatConnectorCustomizer() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">customize</span><span class="params">(Connector connector)</span> </span>&#123;</span><br><span class="line">                connector.setAttribute(<span class="string">"relaxedQueryChars"</span>, <span class="string">"yourvaluehere"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://naccoll.github.io/2019/12/08/oracle-password-expired/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="NaccOll">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="NaccOll's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/12/08/oracle-password-expired/" itemprop="url">Oracle 密码过期解决方案</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-09T00:55:22+08:00">
+                2019-12-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Oracle-密码过期解决方案"><a href="#Oracle-密码过期解决方案" class="headerlink" title="Oracle 密码过期解决方案"></a>Oracle 密码过期解决方案</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>本地使用 docker 来启动 oracle，但遭遇密码过期的情况，因账号已过期无法使用 gui 访问</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>首先 docker 使用 exec 进入容器内部</p>
+<p>其次运行，进入 oracle 命令行工具</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export ORACLE_SID=YourDB</span><br><span class="line">sqlplus /nolog</span><br></pre></td></tr></table></figure>
+
+<p>最后运行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">connect sys(用户名) as sysdba</span><br></pre></td></tr></table></figure>
+
+<p>将提醒你重置密码</p>
+<h2 id="后续处理"><a href="#后续处理" class="headerlink" title="后续处理"></a>后续处理</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> profile <span class="keyword">from</span> DBA_USERS <span class="keyword">where</span> username = <span class="string">'&lt;username&gt;'</span>;</span><br><span class="line"><span class="keyword">alter</span> profile &lt;profile_name&gt; <span class="keyword">limit</span> password_life_time <span class="keyword">UNLIMITED</span>;</span><br><span class="line"><span class="keyword">select</span> resource_name,<span class="keyword">limit</span> <span class="keyword">from</span> dba_profiles <span class="keyword">where</span> profile=<span class="string">'&lt;profile_name&gt;'</span>;</span><br></pre></td></tr></table></figure>
+
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://naccoll.github.io/2019/11/16/Java-Obfuscate/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1171,7 +1442,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1193,7 +1464,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -1230,7 +1501,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
