@@ -767,11 +767,13 @@
       
         
           
-            <p>在windows上，Docker的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作</p>
+            <p>在 windows 上，Docker 的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作</p>
 <ol>
-<li><p>windows快速启动导致的<br><a href="https://github.com/docker/for-win/issues/573#issuecomment-486648315" target="_blank" rel="noopener">关闭快速启动</a></p>
+<li><p>windows 快速启动导致的<br><a href="https://github.com/docker/for-win/issues/573#issuecomment-486648315" target="_blank" rel="noopener">关闭快速启动</a></p>
 </li>
-<li><p>hype-v保留了端口，无法使用<br><a href="https://github.com/docker/for-win/issues/3171#issuecomment-459205576" target="_blank" rel="noopener">弃用保留端口</a></p>
+<li><p>hype-v 保留了端口，无法使用<br><a href="https://github.com/docker/for-win/issues/3171#issuecomment-459205576" target="_blank" rel="noopener">弃用保留端口</a></p>
+</li>
+<li><p>开机端口分配，类似于上一条<br>netsh int ip set dynamicport tcp start=49152 num=16384</p>
 </li>
 </ol>
 

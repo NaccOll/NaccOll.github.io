@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="在windows上，Docker的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows快速启动导致的关闭快速启动  hype-v保留了端口，无法使用弃用保留端口">
+<meta name="description" content="在 windows 上，Docker 的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows 快速启动导致的关闭快速启动  hype-v 保留了端口，无法使用弃用保留端口  开机端口分配，类似于上一条netsh int ip set dynamicport tcp start=49152 num=16384">
 <meta name="keywords" content="docker">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Docker-Windows-Port-Not-Work">
 <meta property="og:url" content="https://naccoll.github.io/2019/06/09/Docker-Windows-Port-Not-Work/index.html">
 <meta property="og:site_name" content="NaccOll&#39;s Blog">
-<meta property="og:description" content="在windows上，Docker的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows快速启动导致的关闭快速启动  hype-v保留了端口，无法使用弃用保留端口">
+<meta property="og:description" content="在 windows 上，Docker 的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows 快速启动导致的关闭快速启动  hype-v 保留了端口，无法使用弃用保留端口  开机端口分配，类似于上一条netsh int ip set dynamicport tcp start=49152 num=16384">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-06-27T11:06:28.033Z">
+<meta property="og:updated_time" content="2020-11-04T04:10:17.441Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Docker-Windows-Port-Not-Work">
-<meta name="twitter:description" content="在windows上，Docker的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows快速启动导致的关闭快速启动  hype-v保留了端口，无法使用弃用保留端口">
+<meta name="twitter:description" content="在 windows 上，Docker 的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作  windows 快速启动导致的关闭快速启动  hype-v 保留了端口，无法使用弃用保留端口  开机端口分配，类似于上一条netsh int ip set dynamicport tcp start=49152 num=16384">
 
 
 
@@ -363,11 +363,13 @@
       
 
       
-        <p>在windows上，Docker的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作</p>
+        <p>在 windows 上，Docker 的部分端口无法使用，有时候会提示无权限，有时候提示是无法操作</p>
 <ol>
-<li><p>windows快速启动导致的<br><a href="https://github.com/docker/for-win/issues/573#issuecomment-486648315" target="_blank" rel="noopener">关闭快速启动</a></p>
+<li><p>windows 快速启动导致的<br><a href="https://github.com/docker/for-win/issues/573#issuecomment-486648315" target="_blank" rel="noopener">关闭快速启动</a></p>
 </li>
-<li><p>hype-v保留了端口，无法使用<br><a href="https://github.com/docker/for-win/issues/3171#issuecomment-459205576" target="_blank" rel="noopener">弃用保留端口</a></p>
+<li><p>hype-v 保留了端口，无法使用<br><a href="https://github.com/docker/for-win/issues/3171#issuecomment-459205576" target="_blank" rel="noopener">弃用保留端口</a></p>
+</li>
+<li><p>开机端口分配，类似于上一条<br>netsh int ip set dynamicport tcp start=49152 num=16384</p>
 </li>
 </ol>
 
