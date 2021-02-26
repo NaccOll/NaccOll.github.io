@@ -4,6 +4,8 @@ date: 2019-12-09 00:55:22
 tags:
   - oracle
   - database
+categories:
+  - Technology
 ---
 
 # Oracle 密码过期解决方案

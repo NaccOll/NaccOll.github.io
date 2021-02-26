@@ -2,6 +2,9 @@
 title: Java-Obfuscate
 date: 2019-11-17 01:32:22
 tags:
+  - Java
+categories:
+  - Technology
 ---
 
 # Java 代码混淆备忘

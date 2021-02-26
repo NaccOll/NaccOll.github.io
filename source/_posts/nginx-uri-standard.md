@@ -3,6 +3,8 @@ title: 关于NGINX转发时的URI规范化
 date: 2020-06-02 16:12:47
 tags:
   - nginx
+categories:
+  - Technology
 ---
 
 ## 问题描述
